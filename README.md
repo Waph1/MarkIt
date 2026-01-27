@@ -1,4 +1,4 @@
-# MarkIt (Beta 0.1)
+# MarkIt (v0.2.0)
 
 **MarkIt** is a modern, beautiful, and privacy-focused Markdown note-taking app for Android. Designed with a clean Google Keep-inspired aesthetic, it puts your content first while giving you the power of Markdown formatting.
 
@@ -22,6 +22,7 @@ This app is a personal project built by a single developer with extensive assist
     *   **Archive & Trash**: Keep your workspace clutter-free.
 *   **Privacy First**: No internet permissions required. No tracking. No cloud lock-in.
 *   **Modern UI**: Built with Jetpack Compose and Material 3, featuring Dark Mode support.
+*   **Search & Sort**: Powerful search with filtering and sorting options (by Date Modified, Created, or Title).
 
 ## Installation
 
