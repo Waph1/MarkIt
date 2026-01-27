@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.keepnotes"
+    package="com.waph1.markit"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="0.1-beta" >
 
     <uses-sdk
         android:minSdkVersion="24"
@@ -12,10 +12,10 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <permission
-        android:name="com.example.keepnotes.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+        android:name="com.waph1.markit.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
         android:protectionLevel="signature" />
 
-    <uses-permission android:name="com.example.keepnotes.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+    <uses-permission android:name="com.waph1.markit.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
 
     <application
         android:allowBackup="true"
@@ -30,7 +30,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.KeepNotes" >
         <activity
-            android:name="com.example.keepnotes.MainActivity"
+            android:name="com.waph1.markit.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.KeepNotes" >
             <intent-filter>
@@ -48,7 +48,7 @@
 
         <provider
             android:name="androidx.startup.InitializationProvider"
-            android:authorities="com.example.keepnotes.androidx-startup"
+            android:authorities="com.waph1.markit.androidx-startup"
             android:exported="false" >
             <meta-data
                 android:name="androidx.emoji2.text.EmojiCompatInitializer"

@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.keepnotes"
+    namespace = "com.waph1.markit"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.keepnotes"
+        applicationId = "com.waph1.markit"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
@@ -63,6 +63,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("androidx.compose.material:material-icons-extended")
     implementation("com.github.jeziellago:compose-markdown:0.5.0")
     implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc03")
 }
