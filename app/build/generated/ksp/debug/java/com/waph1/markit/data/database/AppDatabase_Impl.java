@@ -28,20 +28,24 @@ import javax.annotation.processing.Generated;
 public final class AppDatabase_Impl extends AppDatabase {
   private volatile NoteDao _noteDao;
 
+  private volatile LabelDao _labelDao;
+
   @Override
   @NonNull
   protected SupportSQLiteOpenHelper createOpenHelper(@NonNull final DatabaseConfiguration config) {
-    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(1) {
+    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(2) {
       @Override
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `notes` (`filePath` TEXT NOT NULL, `fileName` TEXT NOT NULL, `folder` TEXT NOT NULL, `title` TEXT NOT NULL, `contentPreview` TEXT NOT NULL, `content` TEXT NOT NULL, `lastModifiedMs` INTEGER NOT NULL, `color` INTEGER NOT NULL, `isPinned` INTEGER NOT NULL, `isArchived` INTEGER NOT NULL, `isTrashed` INTEGER NOT NULL, PRIMARY KEY(`filePath`))");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `labels` (`name` TEXT NOT NULL, PRIMARY KEY(`name`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bb6edd6fabb5d2263812413bf3259a76')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2302acdb396230d0684896b1456b68be')");
       }
 
       @Override
       public void dropAllTables(@NonNull final SupportSQLiteDatabase db) {
         db.execSQL("DROP TABLE IF EXISTS `notes`");
+        db.execSQL("DROP TABLE IF EXISTS `labels`");
         final List<? extends RoomDatabase.Callback> _callbacks = mCallbacks;
         if (_callbacks != null) {
           for (RoomDatabase.Callback _callback : _callbacks) {
@@ -106,9 +110,20 @@ public final class AppDatabase_Impl extends AppDatabase {
                   + " Expected:\n" + _infoNotes + "\n"
                   + " Found:\n" + _existingNotes);
         }
+        final HashMap<String, TableInfo.Column> _columnsLabels = new HashMap<String, TableInfo.Column>(1);
+        _columnsLabels.put("name", new TableInfo.Column("name", "TEXT", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
+        final HashSet<TableInfo.ForeignKey> _foreignKeysLabels = new HashSet<TableInfo.ForeignKey>(0);
+        final HashSet<TableInfo.Index> _indicesLabels = new HashSet<TableInfo.Index>(0);
+        final TableInfo _infoLabels = new TableInfo("labels", _columnsLabels, _foreignKeysLabels, _indicesLabels);
+        final TableInfo _existingLabels = TableInfo.read(db, "labels");
+        if (!_infoLabels.equals(_existingLabels)) {
+          return new RoomOpenHelper.ValidationResult(false, "labels(com.waph1.markit.data.database.LabelEntity).\n"
+                  + " Expected:\n" + _infoLabels + "\n"
+                  + " Found:\n" + _existingLabels);
+        }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "bb6edd6fabb5d2263812413bf3259a76", "cf4356d3e7f77a58ba5df95ed4c8e347");
+    }, "2302acdb396230d0684896b1456b68be", "3e4ac39eff3b6e7ee65561c4198732c5");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;
@@ -119,7 +134,7 @@ public final class AppDatabase_Impl extends AppDatabase {
   protected InvalidationTracker createInvalidationTracker() {
     final HashMap<String, String> _shadowTablesMap = new HashMap<String, String>(0);
     final HashMap<String, Set<String>> _viewTables = new HashMap<String, Set<String>>(0);
-    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "notes");
+    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "notes","labels");
   }
 
   @Override
@@ -129,6 +144,7 @@ public final class AppDatabase_Impl extends AppDatabase {
     try {
       super.beginTransaction();
       _db.execSQL("DELETE FROM `notes`");
+      _db.execSQL("DELETE FROM `labels`");
       super.setTransactionSuccessful();
     } finally {
       super.endTransaction();
@@ -144,6 +160,7 @@ public final class AppDatabase_Impl extends AppDatabase {
   protected Map<Class<?>, List<Class<?>>> getRequiredTypeConverters() {
     final HashMap<Class<?>, List<Class<?>>> _typeConvertersMap = new HashMap<Class<?>, List<Class<?>>>();
     _typeConvertersMap.put(NoteDao.class, NoteDao_Impl.getRequiredConverters());
+    _typeConvertersMap.put(LabelDao.class, LabelDao_Impl.getRequiredConverters());
     return _typeConvertersMap;
   }
 
@@ -172,6 +189,20 @@ public final class AppDatabase_Impl extends AppDatabase {
           _noteDao = new NoteDao_Impl(this);
         }
         return _noteDao;
+      }
+    }
+  }
+
+  @Override
+  public LabelDao labelDao() {
+    if (_labelDao != null) {
+      return _labelDao;
+    } else {
+      synchronized(this) {
+        if(_labelDao == null) {
+          _labelDao = new LabelDao_Impl(this);
+        }
+        return _labelDao;
       }
     }
   }

@@ -85,12 +85,21 @@ class MainViewModel(
         }
         
         // Pinned notes always on top
-        directed.sortedByDescending { it.isPinned }
+        val result = directed.sortedByDescending { it.isPinned }
+        _isLoading.value = false
+        result
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Labels from Room DAO
-    val labels: StateFlow<List<String>> = repository.getLabels()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    // Temporary labels for immediate UI feedback (since Room doesn't show empty folders)
+    private val _tempLabels = MutableStateFlow<Set<String>>(emptySet())
+
+    // Labels from Room DAO combined with temporarily created ones
+    val labels: StateFlow<List<String>> = combine(
+        repository.getLabels(),
+        _tempLabels
+    ) { dbLabels, tempLabels ->
+        (dbLabels + tempLabels).distinct().sorted()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
     // UI State
     // Default to TRUE, but check immediately on init
@@ -98,11 +107,11 @@ class MainViewModel(
     val isPermissionNeeded: StateFlow<Boolean> = _isPermissionNeeded.asStateFlow()
 
     init {
-        // Auto-load
-        val savedUriStr = prefsManager.getRootUri()
-        if (savedUriStr != null) {
-            setRootFolder(Uri.parse(savedUriStr))
-        }
+        // Auto-load managed by MainActivity to ensure permissions
+        // val savedUriStr = prefsManager.getRootUri()
+        // if (savedUriStr != null) {
+        //     setRootFolder(Uri.parse(savedUriStr))
+        // }
     }
 
     private val _currentNote = MutableStateFlow<Note?>(null)
@@ -112,13 +121,16 @@ class MainViewModel(
     val isEditorOpen: StateFlow<Boolean> = _isEditorOpen.asStateFlow()
 
     // isLoading: Room reads are synchronous from cache, so always false after initial sync
-    private val _isLoading = MutableStateFlow(false)
+    // Start true to prevent "No Notes" flash
+    private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     fun setRootFolder(uri: Uri) {
         viewModelScope.launch {
+            _isLoading.value = true
             repository.setRootFolder(uri.toString())
             _isPermissionNeeded.value = false
+            // Loading will be cleared by flow emission
         }
     }
 
@@ -144,6 +156,18 @@ class MainViewModel(
     fun setFilter(filter: NoteFilter) {
         _currentFilter.value = filter
     }
+    
+    fun createLabel(name: String) {
+        if (name.isBlank()) return
+        viewModelScope.launch {
+             val success = repository.createLabel(name)
+             if (success) {
+                 val current = _tempLabels.value.toMutableSet()
+                 current.add(name)
+                 _tempLabels.value = current
+             }
+        }
+    }
 
     fun deleteNote(note: Note) {
         viewModelScope.launch {
@@ -167,13 +191,10 @@ class MainViewModel(
         viewModelScope.launch {
             val savedPath = repository.saveNote(note, oldFile)
             if (savedPath.isNotEmpty()) {
-                // Return updated note so UI stays in sync (e.g. no dupes on next save)
-                // We need to reconstruct the note with the new path/file
-                // But since we just saved it, we can just update the file object in current note if it matches?
-                // Or easier: just query it or update the local object.
-                // Let's update the local object to avoid a read.
                 val updatedFile = java.io.File(savedPath)
-                _currentNote.value = note.copy(file = updatedFile)
+                // Extract new title from filename (in case it was renamed due to conflict)
+                val newTitle = updatedFile.nameWithoutExtension
+                _currentNote.value = note.copy(file = updatedFile, title = newTitle)
             }
         }
     }
@@ -251,6 +272,14 @@ class MainViewModel(
         
         viewModelScope.launch {
             val targetFolder = if (targetLabel.isEmpty()) "Inbox" else targetLabel
+            
+            // Track as temp label if not Inbox
+            if (targetFolder != "Inbox") {
+                 val current = _tempLabels.value.toMutableSet()
+                 current.add(targetFolder)
+                 _tempLabels.value = current
+            }
+            
             repository.moveNotes(notesToMove, targetFolder)
         }
     }

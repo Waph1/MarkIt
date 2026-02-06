@@ -21,6 +21,7 @@ class FileNoteRepository(
     
     // Cache
     private val _notes = MutableStateFlow<List<Note>>(emptyList())
+    private val _labels = MutableStateFlow<List<String>>(emptyList())
     
     // Loading state
     private val _isLoading = MutableStateFlow(false)
@@ -111,6 +112,7 @@ class FileNoteRepository(
             
             // 1. Scan Visible Folders (Labels)
             val visibleLabelFolders = root.listFiles().filter { it.isDirectory && !it.name!!.startsWith(".") }
+            _labels.value = visibleLabelFolders.mapNotNull { it.name }
             for (labelFolder in visibleLabelFolders) {
                 scanFolder(labelFolder, isArchived = false, isTrashed = false)
             }
@@ -672,5 +674,21 @@ class FileNoteRepository(
                 _notes.value = notes
             }
         } catch (e: Exception) { e.printStackTrace() }
+    }
+
+
+    override fun getLabels(): Flow<List<String>> = _labels
+
+    override suspend fun createLabel(name: String): Boolean = withContext(Dispatchers.IO) {
+        rootDir?.let { root ->
+            try {
+                if (root.findFile(name) == null) {
+                    root.createDirectory(name)
+                    refreshNotes()
+                    return@withContext true
+                }
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+        return@withContext false
     }
 }

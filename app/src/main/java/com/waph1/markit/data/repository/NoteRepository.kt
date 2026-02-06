@@ -18,4 +18,7 @@ interface NoteRepository {
     suspend fun restoreNote(id: String)
     suspend fun moveNotes(notes: List<Note>, targetFolder: String)
     suspend fun setRootFolder(uriString: String)
+    
+    fun getLabels(): Flow<List<String>>
+    suspend fun createLabel(name: String): Boolean
 }

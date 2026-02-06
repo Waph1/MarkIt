@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
@@ -83,6 +84,18 @@ fun EditorScreen(
     // UI States
     var showLabelMenu by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
+    var showCreateLabelDialog by remember { mutableStateOf(false) }
+
+    if (showCreateLabelDialog) {
+        CreateLabelDialog(
+            onDismiss = { showCreateLabelDialog = false },
+            onConfirm = { name ->
+                viewModel.createLabel(name)
+                folder = name
+                showCreateLabelDialog = false
+            }
+        )
+    }
     
     // Mode: New notes start in Edit, existing in View
     var isEditing by remember { mutableStateOf(currentNote == null) }
@@ -109,7 +122,10 @@ fun EditorScreen(
             
             val note = Note(
                 file = fileObj,
-                title = title.ifEmpty { "Untitled" },
+                title = title.ifEmpty { 
+                    val dateFormat = java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm", java.util.Locale.getDefault())
+                    dateFormat.format(Date())
+                },
                 content = content.text,
                 lastModified = Date(),
                 color = color,
@@ -206,7 +222,17 @@ fun EditorScreen(
                                     text = { Text(label) },
                                     onClick = { folder = label; showLabelMenu = false }
                                 )
+
                             }
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text("Create new label") },
+                                leadingIcon = { Icon(Icons.Default.Add, null) },
+                                onClick = { 
+                                    showLabelMenu = false
+                                    showCreateLabelDialog = true
+                                }
+                            )
                         }
                     }
                     
@@ -433,7 +459,10 @@ fun EditorScreen(
                         val fileObj = File(parentPath, fileName)
                         val note = Note(
                             file = fileObj,
-                            title = title.ifEmpty { "Untitled" },
+                            title = title.ifEmpty { 
+                                val dateFormat = java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm", java.util.Locale.getDefault())
+                                dateFormat.format(Date())
+                            },
                             content = newText,
                             lastModified = Date(),
                             color = color

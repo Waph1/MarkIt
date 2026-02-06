@@ -29,6 +29,13 @@ import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.automirrored.outlined.DriveFileMove
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -98,6 +105,23 @@ fun DashboardScreen(
     val isPermissionNeeded by viewModel.isPermissionNeeded.collectAsState()
     val currentFilter by viewModel.currentFilter.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    
+    // UI State
+    var showCreateLabelDialog by remember { mutableStateOf(false) }
+
+    if (showCreateLabelDialog) {
+        CreateLabelDialog(
+            onDismiss = { showCreateLabelDialog = false },
+            onConfirm = { name ->
+                viewModel.createLabel(name)
+                showCreateLabelDialog = false
+            }
+        )
+    }
+    
+    fun onRequestCreateLabel() {
+        showCreateLabelDialog = true
+    }
     
     // Selection State
     val selectedNotes by viewModel.selectedNotes.collectAsState()
@@ -176,6 +200,18 @@ fun DashboardScreen(
                         }
                     }
                     
+                    // New Label Button
+                    androidx.compose.material3.NavigationDrawerItem(
+                        label = { Text("Create new label") },
+                        icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                        selected = false,
+                        onClick = {
+                            onRequestCreateLabel()
+                            scope.launch { drawerState.close() }
+                        },
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+
                     androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     
                     // Archive
@@ -250,7 +286,7 @@ fun DashboardScreen(
                         },
                         navigationIcon = {
                              androidx.compose.material3.IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                 Icon(Icons.Default.Menu, contentDescription = androidx.compose.ui.res.stringResource(com.waph1.markit.R.string.menu))
+                                 Icon(Icons.Outlined.Menu, contentDescription = androidx.compose.ui.res.stringResource(com.waph1.markit.R.string.menu))
                              }
                         },
                         actions = {
@@ -600,6 +636,17 @@ fun SelectionTopAppBar(
     var showMoveMenu by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     var showColorMenu by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     var showDeleteDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var showCreateLabelDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+
+    if (showCreateLabelDialog) {
+        CreateLabelDialog(
+            onDismiss = { showCreateLabelDialog = false },
+            onConfirm = { name ->
+                onMove(name) // Creates and moves
+                showCreateLabelDialog = false
+            }
+        )
+    }
     
     val isTrash = currentFilter is MainViewModel.NoteFilter.Trash
     val isArchive = currentFilter is MainViewModel.NoteFilter.Archive
@@ -644,14 +691,14 @@ fun SelectionTopAppBar(
              // Restore (Visible if Trash or Archive)
              if (isTrash || isArchive) {
                  androidx.compose.material3.IconButton(onClick = onRestore) {
-                     Icon(Icons.Default.Refresh, contentDescription = "Restore") // Use Refresh or Restore icon
+                     Icon(Icons.Outlined.Refresh, contentDescription = "Restore") // Use Refresh or Restore icon
                  }
              }
              
              // Move (Hidden in Trash)
              if (!isTrash) {
                  androidx.compose.material3.IconButton(onClick = { showMoveMenu = true }) {
-                     Icon(Icons.Default.Add, contentDescription = "Move") 
+                     Icon(Icons.AutoMirrored.Outlined.DriveFileMove, contentDescription = "Move") 
                  }
                  DropdownMenu(
                      expanded = showMoveMenu,
@@ -673,13 +720,22 @@ fun SelectionTopAppBar(
                               }
                           )
                       }
+                      androidx.compose.material3.HorizontalDivider()
+                      DropdownMenuItem(
+                          text = { Text("Create new label") },
+                          leadingIcon = { Icon(Icons.Default.Add, null) },
+                          onClick = { 
+                              showMoveMenu = false
+                              showCreateLabelDialog = true
+                          }
+                      )
                  }
              }
              
              // Archive (Hidden in Trash and Archive)
              if (!isTrash && !isArchive) {
                  androidx.compose.material3.IconButton(onClick = onArchive) {
-                     Icon(Icons.Default.Check, contentDescription = "Archive")
+                     Icon(Icons.Outlined.Archive, contentDescription = "Archive")
                  }
                  
                  // Color Picker
@@ -729,17 +785,51 @@ fun SelectionTopAppBar(
              // Pin/Unpin (Hidden in Trash and Archive)
              if (!isTrash && !isArchive) {
                  androidx.compose.material3.IconButton(onClick = onPin) {
-                     Icon(Icons.Default.Star, contentDescription = "Pin/Unpin")
+                     Icon(Icons.Outlined.Star, contentDescription = "Pin/Unpin")
                  }
              }
              
              // Delete
              androidx.compose.material3.IconButton(onClick = { showDeleteDialog = true }) {
-                 Icon(Icons.Default.Delete, contentDescription = "Delete")
+                 Icon(Icons.Outlined.Delete, contentDescription = "Delete")
              }
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
+    )
+}
+
+@Composable
+fun CreateLabelDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var text by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
+    
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Create new label") },
+        text = { 
+            androidx.compose.material3.OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                label = { Text("Label name") },
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = { onConfirm(text) },
+                enabled = text.isNotBlank()
+            ) {
+                Text("Create")
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
     )
 }

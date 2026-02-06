@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -74,7 +75,7 @@ fun SearchBar(
         if (searchQuery.isNotEmpty()) {
             IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
                 Icon(
-                    imageVector = Icons.Default.Close,
+                    imageVector = Icons.Outlined.Close,
                     contentDescription = stringResource(R.string.clear_search),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )

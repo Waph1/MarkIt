@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1] - 2026-02-06
+### Changed
+- **Maintenance**: Updated project dependencies to 2024 standards.
+    - Updated Kotlin to `1.9.22`.
+    - Updated Compose to BOM `2024.02.00` / Compiler `1.5.8`.
+    - Updated AGP to `8.2.2`.
+
 ## [0.3.0] - 2026-02-05
 ### Added
 - **Search & Filter**: Logic to search notes by title and content with a 300ms debounce for performance.
