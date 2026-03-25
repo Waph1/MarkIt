@@ -27,6 +27,9 @@ interface NoteDao {
     
     @Query("SELECT * FROM notes WHERE filePath = :filePath")
     suspend fun getNoteByPath(filePath: String): NoteEntity?
+
+    @Query("SELECT * FROM notes WHERE filePath IN (:filePaths)")
+    suspend fun getNotesByPaths(filePaths: List<String>): List<NoteEntity>
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNote(note: NoteEntity)
@@ -51,12 +54,21 @@ interface NoteDao {
     
     @Query("UPDATE notes SET isPinned = :isPinned WHERE filePath = :filePath")
     suspend fun updatePinStatus(filePath: String, isPinned: Boolean)
+
+    @Query("UPDATE notes SET isPinned = :isPinned WHERE filePath IN (:filePaths)")
+    suspend fun updatePinStatuses(filePaths: List<String>, isPinned: Boolean)
     
     @Query("UPDATE notes SET isArchived = 1, isTrashed = 0 WHERE filePath = :filePath")
     suspend fun archiveNote(filePath: String)
+
+    @Query("UPDATE notes SET isArchived = 1, isTrashed = 0 WHERE filePath IN (:filePaths)")
+    suspend fun archiveNotes(filePaths: List<String>)
     
     @Query("UPDATE notes SET isTrashed = 1 WHERE filePath = :filePath")
     suspend fun trashNote(filePath: String)
+
+    @Query("UPDATE notes SET isTrashed = 1 WHERE filePath IN (:filePaths)")
+    suspend fun trashNotes(filePaths: List<String>)
     
     @Query("UPDATE notes SET isArchived = 0, isTrashed = 0 WHERE filePath = :filePath")
     suspend fun restoreNote(filePath: String)
