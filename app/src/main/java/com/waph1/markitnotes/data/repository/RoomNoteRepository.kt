@@ -230,10 +230,9 @@ class RoomNoteRepository(
     }
     
     override suspend fun deleteNotes(noteIds: List<String>) = withContext(Dispatchers.IO) {
-        noteIds.forEach { id ->
-            moveNoteToSystemFolder(id, ".Deleted")
-            noteDao.trashNote(id)
-        }
+        val entities = noteDao.getNotesByPaths(noteIds)
+        moveNoteEntitiesToSystemFolder(entities, ".Deleted")
+        noteDao.trashNotes(entities.map { it.filePath })
     }
     
     override suspend fun archiveNote(id: String) = withContext(Dispatchers.IO) {
@@ -242,10 +241,9 @@ class RoomNoteRepository(
     }
     
     override suspend fun archiveNotes(noteIds: List<String>) = withContext(Dispatchers.IO) {
-        noteIds.forEach { id ->
-            moveNoteToSystemFolder(id, ".Archive")
-            noteDao.archiveNote(id)
-        }
+        val entities = noteDao.getNotesByPaths(noteIds)
+        moveNoteEntitiesToSystemFolder(entities, ".Archive")
+        noteDao.archiveNotes(entities.map { it.filePath })
     }
     
     override suspend fun restoreNote(id: String) = withContext(Dispatchers.IO) {
@@ -282,11 +280,9 @@ class RoomNoteRepository(
     
     override suspend fun togglePinStatus(noteIds: List<String>, isPinned: Boolean) = withContext(Dispatchers.IO) {
         val root = rootDir ?: return@withContext
+        val entities = noteDao.getNotesByPaths(noteIds).filter { it.isPinned != isPinned }
         
-        noteIds.forEach { id ->
-            val entity = noteDao.getNoteByPath(id) ?: return@forEach
-            if (entity.isPinned == isPinned) return@forEach
-            
+        entities.forEach { entity ->
             val folderName = entity.folder
             val fileName = entity.fileName
             
@@ -312,9 +308,9 @@ class RoomNoteRepository(
                       }
                  }
             }
-            
-            noteDao.updatePinStatus(id, isPinned)
         }
+
+        noteDao.updatePinStatuses(entities.map { it.filePath }, isPinned)
     }
     
     override suspend fun moveNotes(notes: List<Note>, targetFolder: String) = withContext(Dispatchers.IO) {
@@ -526,28 +522,34 @@ class RoomNoteRepository(
     }
     
     private suspend fun moveNoteToSystemFolder(id: String, systemFolderName: String) {
-        val root = rootDir ?: return
         val entity = noteDao.getNoteByPath(id) ?: return
-        val folder = entity.folder
-        val fileName = entity.fileName
-        
-        var sourceFile = root.findFile(folder)?.findFile(fileName) ?:
-                         root.findFile(folder)?.findFile("Pinned")?.findFile(fileName) ?:
-                         root.findFile(".Archive")?.findFile(folder)?.findFile(fileName) ?:
-                         root.findFile(".Deleted")?.findFile(folder)?.findFile(fileName)
-        
-        if (sourceFile != null) {
-            val sysRoot = root.findFile(systemFolderName) ?: root.createDirectory(systemFolderName)
-            val targetLabelFolder = sysRoot?.findFile(folder) ?: sysRoot?.createDirectory(folder)
+        moveNoteEntitiesToSystemFolder(listOf(entity), systemFolderName)
+    }
+
+    private suspend fun moveNoteEntitiesToSystemFolder(entities: List<NoteEntity>, systemFolderName: String) {
+        val root = rootDir ?: return
+        entities.forEach { entity ->
+            val folder = entity.folder
+            val fileName = entity.fileName
             
-            if (targetLabelFolder != null) {
-                val content = readText(sourceFile)
-                val newFile = targetLabelFolder.createFile("text/markdown", fileName)
-                newFile?.let { nf ->
-                    context.contentResolver.openOutputStream(nf.uri)?.use { os ->
-                        OutputStreamWriter(os).use { it.write(content) }
+            var sourceFile = root.findFile(folder)?.findFile(fileName) ?:
+                             root.findFile(folder)?.findFile("Pinned")?.findFile(fileName) ?:
+                             root.findFile(".Archive")?.findFile(folder)?.findFile(fileName) ?:
+                             root.findFile(".Deleted")?.findFile(folder)?.findFile(fileName)
+
+            if (sourceFile != null) {
+                val sysRoot = root.findFile(systemFolderName) ?: root.createDirectory(systemFolderName)
+                val targetLabelFolder = sysRoot?.findFile(folder) ?: sysRoot?.createDirectory(folder)
+
+                if (targetLabelFolder != null) {
+                    val content = readText(sourceFile)
+                    val newFile = targetLabelFolder.createFile("text/markdown", fileName)
+                    newFile?.let { nf ->
+                        context.contentResolver.openOutputStream(nf.uri)?.use { os ->
+                            OutputStreamWriter(os).use { it.write(content) }
+                        }
+                        sourceFile.delete()
                     }
-                    sourceFile.delete()
                 }
             }
         }
