@@ -460,7 +460,7 @@ class RoomNoteRepository(
                 // Update labels in DB
                 // We can just nuke and rebuild labels as they are just folder names
                 labelDao.deleteAll()
-                currentLabels.forEach { labelDao.insert(LabelEntity(it)) }
+                labelDao.insertAll(currentLabels.map { LabelEntity(it) })
             } catch (e: Exception) {
                  android.util.Log.e("RoomNoteRepository", "Error syncing labels", e)
             }
