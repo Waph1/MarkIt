@@ -377,7 +377,7 @@ class MainViewModel(
         val selectedIds = _selectedNotes.value.toList()
         clearSelection()
         viewModelScope.launch {
-            selectedIds.forEach { repository.restoreNote(it) }
+            repository.restoreNotes(selectedIds)
         }
     }
 

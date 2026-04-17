@@ -73,6 +73,9 @@ interface NoteDao {
     @Query("UPDATE notes SET isArchived = 0, isTrashed = 0 WHERE filePath = :filePath")
     suspend fun restoreNote(filePath: String)
     
+    @Query("UPDATE notes SET isArchived = 0, isTrashed = 0 WHERE filePath IN (:filePaths)")
+    suspend fun restoreNotes(filePaths: List<String>)
+
     @Query("SELECT COUNT(*) FROM notes WHERE folder = :folder")
     suspend fun countNotesInFolder(folder: String): Int
     

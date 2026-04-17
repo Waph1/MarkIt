@@ -17,6 +17,7 @@ interface NoteRepository {
     suspend fun togglePinStatus(noteIds: List<String>, isPinned: Boolean)
     
     suspend fun restoreNote(id: String)
+    suspend fun restoreNotes(noteIds: List<String>)
     suspend fun moveNotes(notes: List<Note>, targetFolder: String)
     suspend fun setRootFolder(uriString: String)
     

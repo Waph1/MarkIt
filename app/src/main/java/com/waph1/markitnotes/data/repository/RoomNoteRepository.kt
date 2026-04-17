@@ -250,6 +250,23 @@ class RoomNoteRepository(
         val entity = noteDao.getNoteByPath(id) ?: return@withContext
         val root = rootDir ?: return@withContext
         
+        restoreFileFromSystemFolder(entity, root)
+
+        noteDao.restoreNote(id)
+    }
+
+    override suspend fun restoreNotes(noteIds: List<String>) = withContext(Dispatchers.IO) {
+        val entities = noteDao.getNotesByPaths(noteIds)
+        val root = rootDir ?: return@withContext
+
+        entities.forEach { entity ->
+            restoreFileFromSystemFolder(entity, root)
+        }
+
+        noteDao.restoreNotes(entities.map { it.filePath })
+    }
+
+    private suspend fun restoreFileFromSystemFolder(entity: NoteEntity, root: DocumentFile) {
         val folder = entity.folder
         val fileName = entity.fileName
         
@@ -268,8 +285,6 @@ class RoomNoteRepository(
                 sourceFile.delete()
             }
         }
-        
-        noteDao.restoreNote(id)
     }
     
     override suspend fun setNoteColor(id: String, color: Long) = withContext(Dispatchers.IO) {
