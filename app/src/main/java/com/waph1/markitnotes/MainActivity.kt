@@ -17,7 +17,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -117,29 +116,29 @@ class MainActivity : ComponentActivity() {
                     val scope = androidx.compose.runtime.rememberCoroutineScope()
 
                     // Dialog States
-                    var showCreateLabelDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
-                    var labelToDelete by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+                    val showCreateLabelDialog = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+                    val labelToDelete = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
                     val context = androidx.compose.ui.platform.LocalContext.current
 
-                    if (showCreateLabelDialog) {
+                    if (showCreateLabelDialog.value) {
                         com.waph1.markitnotes.ui.CreateLabelDialog(
-                            onDismiss = { showCreateLabelDialog = false },
+                            onDismiss = { showCreateLabelDialog.value = false },
                             onConfirm = { name ->
                                 viewModel.createLabel(name)
-                                showCreateLabelDialog = false
+                                showCreateLabelDialog.value = false
                             }
                         )
                     }
 
-                    if (labelToDelete != null) {
+                    if (labelToDelete.value != null) {
                          androidx.compose.material3.AlertDialog(
-                            onDismissRequest = { labelToDelete = null },
+                            onDismissRequest = { labelToDelete.value = null },
                             title = { androidx.compose.material3.Text("Delete Label") },
-                            text = { androidx.compose.material3.Text("Are you sure you want to delete label '$labelToDelete'? Notes will not be deleted.") },
+                            text = { androidx.compose.material3.Text("Are you sure you want to delete label '${labelToDelete.value}'? Notes will not be deleted.") },
                             confirmButton = {
                                 androidx.compose.material3.TextButton(
                                     onClick = {
-                                        val name = labelToDelete!!
+                                        val name = labelToDelete.value!!
                                         viewModel.deleteLabel(
                                             name = name,
                                             onSuccess = { 
@@ -149,14 +148,14 @@ class MainActivity : ComponentActivity() {
                                                 android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_SHORT).show()
                                             }
                                         )
-                                        labelToDelete = null
+                                        labelToDelete.value = null
                                     }
                                 ) {
                                     androidx.compose.material3.Text("Delete")
                                 }
                             },
                             dismissButton = {
-                                androidx.compose.material3.TextButton(onClick = { labelToDelete = null }) {
+                                androidx.compose.material3.TextButton(onClick = { labelToDelete.value = null }) {
                                     androidx.compose.material3.Text("Cancel")
                                 }
                             }
@@ -179,8 +178,8 @@ class MainActivity : ComponentActivity() {
                                     viewModel.setFilter(it)
                                     scope.launch { drawerState.close() }
                                 },
-                                onCreateLabel = { showCreateLabelDialog = true },
-                                onDeleteLabel = { labelToDelete = it },
+                                onCreateLabel = { showCreateLabelDialog.value = true },
+                                onDeleteLabel = { labelToDelete.value = it },
                                 closeDrawer = { scope.launch { drawerState.close() } }
                             )
                         }
