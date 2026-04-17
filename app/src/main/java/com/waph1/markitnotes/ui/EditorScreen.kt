@@ -762,9 +762,9 @@ fun PreviewWebView(
                 settings.domStorageEnabled = true
                 settings.allowFileAccess = true
                 @Suppress("DEPRECATION")
-                settings.allowFileAccessFromFileURLs = true
+                settings.allowFileAccessFromFileURLs = false
                 @Suppress("DEPRECATION")
-                settings.allowUniversalAccessFromFileURLs = true
+                settings.allowUniversalAccessFromFileURLs = false
                 
                 addJavascriptInterface(object {
                     @android.webkit.JavascriptInterface
