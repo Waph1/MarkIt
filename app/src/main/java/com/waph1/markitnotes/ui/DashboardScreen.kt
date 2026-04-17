@@ -65,7 +65,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import dev.jeziellago.compose.markdowntext.MarkdownText
 import com.waph1.markitnotes.data.model.Note
 import com.waph1.markitnotes.data.repository.PrefsManager
 import androidx.compose.animation.AnimatedVisibility
