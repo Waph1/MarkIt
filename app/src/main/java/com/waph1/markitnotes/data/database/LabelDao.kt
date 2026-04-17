@@ -14,6 +14,9 @@ interface LabelDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(label: LabelEntity)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertLabels(labels: List<LabelEntity>)
+
     @Query("DELETE FROM labels WHERE name = :name")
     suspend fun delete(name: String)
 
