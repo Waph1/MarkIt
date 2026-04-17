@@ -17,7 +17,6 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.OutputStreamWriter
 import java.util.Date
-import androidx.room.withTransaction
 
 import com.waph1.markitnotes.data.utils.NoteFormatUtils
 
