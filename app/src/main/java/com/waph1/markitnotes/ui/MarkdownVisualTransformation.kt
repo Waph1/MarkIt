@@ -35,6 +35,7 @@ private val codeRegex = Regex("""`(.*?)`""")
 private val checkboxRegex = Regex("""^(\s*[-*+]\s+\[[ xX]\]\s+)(.*)$""", RegexOption.MULTILINE)
 private val listRegex = Regex("""^(\s*[-*+•]|\d+\.)\s+(.*)$""", RegexOption.MULTILINE)
 private val quoteRegex = Regex("""^(\s*>\s+)(.*)$""", RegexOption.MULTILINE)
+private val checkboxStatusRegex = Regex("""\[[xX]\]""")
 
 fun buildAnnotatedStringWithMarkdown(
     text: String,
@@ -174,7 +175,7 @@ fun buildAnnotatedStringWithMarkdown(
         checkboxRegex.findAll(text).forEach { match ->
             val prefixPart = match.groups[1]!!
             val contentPart = match.groups[2]!!
-            val isChecked = prefixPart.value.contains(Regex("""\[[xX]\]"""))
+            val isChecked = prefixPart.value.contains(checkboxStatusRegex)
             
             addStyle(SpanStyle(color = syntaxColor), prefixPart.range.first, prefixPart.range.last + 1)
             if (isChecked) {

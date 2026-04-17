@@ -74,6 +74,11 @@ import com.waph1.markitnotes.data.model.Note
 import java.io.File
 import java.util.Date
 
+private val checkboxContinuationRegex = Regex("""^(\s*[-*+]\s+\[[ xX]\]\s*)(.*)$""")
+private val bulletContinuationRegex = Regex("""^(\s*[-*+•]|\d+\.)\s+(.*)$""")
+private val quoteContinuationRegex = Regex("""^(\s*>\s+)(.*)$""")
+private val toggleTaskRegex = Regex("- \\[[ xX]\\]")
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun EditorScreen(
@@ -542,9 +547,9 @@ fun EditorScreen(
                                 val lastLine = textBeforeLastNewline.substring(lastLineStart)
                                 val trimmedLastLine = lastLine.trimEnd()
                                 
-                                val checkboxMatch = Regex("""^(\s*[-*+]\s+\[[ xX]\]\s*)(.*)$""").find(trimmedLastLine)
-                                val bulletMatch = Regex("""^(\s*[-*+•]|\d+\.)\s+(.*)$""").find(trimmedLastLine)
-                                val quoteMatch = Regex("""^(\s*>\s+)(.*)$""").find(trimmedLastLine)
+                                val checkboxMatch = checkboxContinuationRegex.find(trimmedLastLine)
+                                val bulletMatch = bulletContinuationRegex.find(trimmedLastLine)
+                                val quoteMatch = quoteContinuationRegex.find(trimmedLastLine)
                                 
                                 when {
                                     checkboxMatch != null -> {
@@ -720,10 +725,9 @@ fun ColorPicker(
 }
 
 fun toggleTask(markdown: String, index: Int, checked: Boolean): String {
-    val regex = Regex("- \\[[ xX]\\]")
     var matchIndex = 0
     
-    return regex.replace(markdown) { matchResult ->
+    return toggleTaskRegex.replace(markdown) { matchResult ->
         if (matchIndex++ == index) {
             if (checked) "- [x]" else "- [ ]"
         } else {
