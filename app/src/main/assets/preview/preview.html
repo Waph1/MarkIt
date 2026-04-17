@@ -134,10 +134,37 @@
     <script>
         // Initialize MarkdownIt
         const md = window.markdownit({
-            html: true,
+            html: false, // Fix XSS by disabling raw HTML
             linkify: true,
             typographer: true,
             breaks: true
+        });
+
+        // Add support for <u> tag safely
+        md.inline.ruler.before('emphasis', 'underline', (state, silent) => {
+            const marker = '<u>';
+            const closer = '</u>';
+            if (!state.src.startsWith(marker, state.pos)) return false;
+
+            const start = state.pos;
+            const end = state.src.indexOf(closer, start + marker.length);
+            if (end === -1) return false;
+
+            if (!silent) {
+                const tokenOpen = state.push('underline_open', 'u', 1);
+                tokenOpen.markup = marker;
+
+                const oldMax = state.posMax;
+                state.pos += marker.length;
+                state.posMax = end;
+                state.md.inline.tokenize(state);
+                state.posMax = oldMax;
+
+                const tokenClose = state.push('underline_close', 'u', -1);
+                tokenClose.markup = closer;
+            }
+            state.pos = end + closer.length;
+            return true;
         });
 
         // Use Plugins
