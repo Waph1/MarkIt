@@ -236,50 +236,11 @@ fun DashboardScreen(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                androidx.compose.material3.TopAppBar(
-                    title = {
-                        androidx.compose.material3.Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            tonalElevation = 2.dp
-                        ) {
-                            SearchBar(viewModel = viewModel)
-                        }
-                    },
-                    navigationIcon = {
-                         androidx.compose.material3.IconButton(onClick = onOpenDrawer) {
-                             Icon(Icons.Outlined.Menu, contentDescription = androidx.compose.ui.res.stringResource(com.waph1.markitnotes.R.string.menu))
-                         }
-                    },
-                    actions = {
-                        if (currentFilter is MainViewModel.NoteFilter.Trash) {
-                            var showMoreMenu by remember { mutableStateOf(false) }
-                            Box {
-                                androidx.compose.material3.IconButton(onClick = { showMoreMenu = true }) {
-                                    Icon(Icons.Default.MoreVert, contentDescription = androidx.compose.ui.res.stringResource(com.waph1.markitnotes.R.string.more_options))
-                                }
-                                DropdownMenu(
-                                    expanded = showMoreMenu,
-                                    onDismissRequest = { showMoreMenu = false }
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text(androidx.compose.ui.res.stringResource(com.waph1.markitnotes.R.string.empty_trash_desc)) },
-                                        leadingIcon = { Icon(Icons.Outlined.Delete, null) },
-                                        onClick = { 
-                                            showEmptyTrashDialog = true
-                                            showMoreMenu = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
+                DashboardTopBar(
+                    viewModel = viewModel,
+                    currentFilter = currentFilter,
+                    onOpenDrawer = onOpenDrawer,
+                    onEmptyTrashClick = { showEmptyTrashDialog = true }
                 )
             }
         },
@@ -359,6 +320,61 @@ fun DashboardScreen(
 }
 
 
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DashboardTopBar(
+    viewModel: MainViewModel,
+    currentFilter: MainViewModel.NoteFilter,
+    onOpenDrawer: () -> Unit,
+    onEmptyTrashClick: () -> Unit
+) {
+    androidx.compose.material3.TopAppBar(
+        title = {
+            androidx.compose.material3.Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                tonalElevation = 2.dp
+            ) {
+                SearchBar(viewModel = viewModel)
+            }
+        },
+        navigationIcon = {
+             androidx.compose.material3.IconButton(onClick = onOpenDrawer) {
+                 Icon(Icons.Outlined.Menu, contentDescription = androidx.compose.ui.res.stringResource(com.waph1.markitnotes.R.string.menu))
+             }
+        },
+        actions = {
+            if (currentFilter is MainViewModel.NoteFilter.Trash) {
+                var showMoreMenu by remember { mutableStateOf(false) }
+                Box {
+                    androidx.compose.material3.IconButton(onClick = { showMoreMenu = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = androidx.compose.ui.res.stringResource(com.waph1.markitnotes.R.string.more_options))
+                    }
+                    DropdownMenu(
+                        expanded = showMoreMenu,
+                        onDismissRequest = { showMoreMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(androidx.compose.ui.res.stringResource(com.waph1.markitnotes.R.string.empty_trash_desc)) },
+                            leadingIcon = { Icon(Icons.Outlined.Delete, null) },
+                            onClick = {
+                                onEmptyTrashClick()
+                                showMoreMenu = false
+                            }
+                        )
+                    }
+                }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    )
+}
 
 @Composable
 fun NoteGrid(
