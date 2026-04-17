@@ -408,9 +408,9 @@ class MainViewModel(
         viewModelScope.launch {
             val allNotesList = allNotes.first()
             val notesToUpdate = allNotesList.filter { selectedIds.contains(it.file.path) }
-            
-            notesToUpdate.forEach { note ->
-                repository.setNoteColor(note.file.path, color)
+            val paths = notesToUpdate.map { it.file.path }
+            if (paths.isNotEmpty()) {
+                repository.setNoteColors(paths, color)
             }
         }
     }

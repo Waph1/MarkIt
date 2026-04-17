@@ -14,6 +14,7 @@ interface NoteRepository {
     suspend fun archiveNote(id: String)
     suspend fun archiveNotes(noteIds: List<String>)
     suspend fun setNoteColor(id: String, color: Long)
+    suspend fun setNoteColors(ids: List<String>, color: Long)
     suspend fun togglePinStatus(noteIds: List<String>, isPinned: Boolean)
     
     suspend fun restoreNote(id: String)

@@ -51,6 +51,9 @@ interface NoteDao {
     
     @Query("UPDATE notes SET color = :color WHERE filePath = :filePath")
     suspend fun updateColor(filePath: String, color: Long)
+
+    @Query("UPDATE notes SET color = :color WHERE filePath IN (:filePaths)")
+    suspend fun updateColors(filePaths: List<String>, color: Long)
     
     @Query("UPDATE notes SET isPinned = :isPinned WHERE filePath = :filePath")
     suspend fun updatePinStatus(filePath: String, isPinned: Boolean)

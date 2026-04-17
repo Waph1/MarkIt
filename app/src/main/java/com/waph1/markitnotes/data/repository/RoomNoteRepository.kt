@@ -277,6 +277,45 @@ class RoomNoteRepository(
         val note = entity.toNote().copy(color = color)
         saveNote(note, note.file)
     }
+
+    override suspend fun setNoteColors(ids: List<String>, color: Long) = withContext(Dispatchers.IO) {
+        val root = rootDir ?: return@withContext
+        val entities = noteDao.getNotesByPaths(ids)
+
+        entities.forEach { entity ->
+            val note = entity.toNote().copy(color = color)
+            val folderName = entity.folder
+            val fileName = entity.fileName
+
+            // Determine actual root based on status
+            val effectiveRoot = when {
+                note.isTrashed -> root.findFile(".Deleted") ?: root.createDirectory(".Deleted")
+                note.isArchived -> root.findFile(".Archive") ?: root.createDirectory(".Archive")
+                else -> root
+            } ?: root
+
+            var targetDir = effectiveRoot.findFile(folderName) ?: effectiveRoot.createDirectory(folderName) ?: return@forEach
+
+            if (note.isPinned && !note.isArchived && !note.isTrashed) {
+                targetDir = targetDir.findFile("Pinned") ?: targetDir.createDirectory("Pinned") ?: targetDir
+            }
+
+            val targetFileDoc = targetDir.findFile(fileName)
+
+            val existingContent = targetFileDoc?.let { readText(it) }
+            val fullContent = NoteFormatUtils.constructFileContent(note, existingContent)
+
+            targetFileDoc?.let { doc ->
+                context.contentResolver.openOutputStream(doc.uri, "wt")?.use { outputStream ->
+                    OutputStreamWriter(outputStream).use { writer ->
+                        writer.write(fullContent)
+                    }
+                }
+            }
+        }
+
+        noteDao.updateColors(ids, color)
+    }
     
     override suspend fun togglePinStatus(noteIds: List<String>, isPinned: Boolean) = withContext(Dispatchers.IO) {
         val root = rootDir ?: return@withContext
